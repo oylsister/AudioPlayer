@@ -28,7 +28,7 @@ void SetAllAudioBufferString(std::string audioBuffer, std::string audioPath);
 bool IsPlaying(int slot);
 bool IsAllPlaying();
 
-class CAudioPlayerInterface : IAudioPlayer
+class CAudioPlayerInterface : public IAudioPlayer
 {
 public:
   virtual void SetPlayerHearing(int slot, bool hearing) override;
