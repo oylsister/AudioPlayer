@@ -8,6 +8,7 @@
 class IAudioPlayer
 {
 public:
+  virtual ~IAudioPlayer() = default;
   /*
    * @param slot - player slot to set
    * @param hearing - whether player can hear
