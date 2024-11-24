@@ -43,6 +43,10 @@ bool initialized = false;
 CModule *engine = nullptr;
 CModule *server = nullptr;
 
+#ifdef PLATFORM_LINUX
+#define AUDIOPLAYER_INTERFACE "AudioPlayer002"
+#endif
+
 OpusEncoder *encoder = opus_encoder_create(48000, 1, OPUS_APPLICATION_AUDIO, NULL);
 
 bool g_bPlaying = false;
