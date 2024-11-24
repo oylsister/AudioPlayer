@@ -87,7 +87,6 @@ target("linux")
     add_defines("PLATFORM_LINUX")
     add_files("src/*.cpp")
     add_headerfiles("src/**.h")
-    add_headerfiles("public/**.h")
     add_packages("libopus")
     set_symbols("hidden")
 

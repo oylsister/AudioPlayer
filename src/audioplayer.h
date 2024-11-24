@@ -2,7 +2,9 @@
 
 #include <ISmmPlugin.h>
 #include <serversideclient.h>
+#ifdef PLATFORM_WINDOWS
 #include "../public/iaudioplayer.h"
+#endif
 #include "opus/opus.h"
 
 #ifdef _WIN32

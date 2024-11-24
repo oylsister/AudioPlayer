@@ -1,5 +1,8 @@
 #include <string>
+
+#ifdef PLATFORM_WINDOWS
 #include "../public/iaudioplayer.h"
+#endif
 
 // not using
 // /*
@@ -28,6 +31,7 @@ void SetAllAudioBufferString(std::string audioBuffer, std::string audioPath);
 bool IsPlaying(int slot);
 bool IsAllPlaying();
 
+#ifdef PLATFORM_WINDOWS
 class CAudioPlayerInterface : public IAudioPlayer
 {
 public:
@@ -42,6 +46,23 @@ public:
   virtual bool IsPlaying(int slot) override;
   virtual bool IsAllPlaying() override;
 };
+
+#else
+class CAudioPlayerInterface
+{
+public:
+  virtual void SetPlayerHearing(int slot, bool hearing);
+  virtual void SetAllPlayerHearing(bool hearing);
+  virtual bool IsHearing(int slot);
+
+  virtual void SetPlayerAudioBuffer(int slot, const char *audioBuffer, int audioBufferSize);
+  virtual void SetPlayerAudioFile(int slot, const char *audioFile, int audioFileSize);
+  virtual void SetAllAudioBuffer(const char *audioBuffer, int audioBufferSize);
+  virtual void SetAllAudioFile(const char *audioFile, int audioFileSize);
+  virtual bool IsPlaying(int slot);
+  virtual bool IsAllPlaying();
+};
+#endif
 
 #ifdef PLATFORM_LINUX
 #define PINVOKE_EXPORT __attribute__((visibility("default")))
