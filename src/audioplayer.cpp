@@ -142,7 +142,8 @@ void SendVoiceDataLoop()
                     // 1 (non-exist but legit client index) -> a skeleton icon with no name playing the audio, no need sv_alltalk 1
                     // 1337 (non-exist and illegal client index) -> no display, but still playing audio, no need sv_alltalk 1
                     // btw, calling CreateFakeClient in this thread will cause weird bug in counterstrikesharp
-                    data.msg->set_client(1337);
+                    //data.msg->set_client(1337);
+                    data.msg->set_xuid(0);
                     client->GetNetChannel()->SendNetMessage(data.msg, NetChannelBufType_t::BUF_VOICE);
                 }
             }
