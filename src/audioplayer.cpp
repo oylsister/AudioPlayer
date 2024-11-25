@@ -160,11 +160,8 @@ void SendVoiceDataLoop()
                     auto bot = 0;
                     if(tv != nullptr)
                     {
-                        Message("Found HLTV");
                         bot = tv->GetPlayerSlot().Get();
                     }
-                    else
-                        Message("HLTV is null");
 
                     data.msg->set_client(bot);
                     data.msg->set_xuid(0);
