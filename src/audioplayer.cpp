@@ -111,6 +111,21 @@ void SendVoiceDataLoop()
             g_GlobalAudioBuffer.erase(g_GlobalAudioBuffer.begin());
         }
 
+        CServerSideClient *tv = nullptr;
+        for (int i = 0; i < client_list->Count(); i++)
+        {
+            if (!client_list->IsValidIndex(i))
+            {
+                continue;
+            }
+            CServerSideClient *client = client_list->Element(i);
+            if(client->IsHLTV())
+            {
+                tv = client;
+                break;
+            }
+        }
+
         for (int i = 0; i < client_list->Count(); i++)
         {
             if (!client_list->IsValidIndex(i))
@@ -142,7 +157,16 @@ void SendVoiceDataLoop()
                     // 1 (non-exist but legit client index) -> a skeleton icon with no name playing the audio, no need sv_alltalk 1
                     // 1337 (non-exist and illegal client index) -> no display, but still playing audio, no need sv_alltalk 1
                     // btw, calling CreateFakeClient in this thread will cause weird bug in counterstrikesharp
-                    //data.msg->set_client(1337);
+                    auto bot = 0;
+                    if(tv != nullptr)
+                    {
+                        Message("Found HLTV");
+                        bot = tv->GetPlayerSlot().Get();
+                    }
+                    else
+                        Message("HLTV is null");
+
+                    data.msg->set_client(bot);
                     data.msg->set_xuid(0);
                     client->GetNetChannel()->SendNetMessage(data.msg, NetChannelBufType_t::BUF_VOICE);
                 }
