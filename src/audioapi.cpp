@@ -85,11 +85,6 @@ namespace api
     {
       std::unique_lock<std::shared_mutex> lock(g_Mutex);
 
-      if (!g_GlobalAudioBuffer.empty())
-      {
-        g_TempAudio = g_GlobalAudioBuffer;
-      }
-
       g_GlobalAudioBuffer.clear();
       g_GlobalProgress = 0;
       for (auto &callback : g_PlayEndListeners)
@@ -99,6 +94,12 @@ namespace api
       }
       return;
     }
+
+    if (!g_GlobalAudioBuffer.empty())
+    {
+      g_TempAudio = g_GlobalAudioBuffer;
+    }
+
     auto lambda = [&g_TempAudio](std::vector<SVCVoiceDataMessage> msgbuffer)
     {
       std::unique_lock<std::shared_mutex> lock(g_Mutex);
@@ -106,7 +107,12 @@ namespace api
 
       if(!g_TempAudio.empty())
       {
-        g_GlobalAudioBuffer.insert(g_GlobalAudioBuffer.end(), g_TempAudio.begin(), g_TempAudio.end());
+        auto lastIndex = g_GlobalAudioBuffer.size() - 1;
+        
+        if(lastIndex < g_TempAudio.size())
+        {
+          g_GlobalAudioBuffer.insert(g_GlobalAudioBuffer.end(), g_TempAudio.begin() + lastIndex, g_TempAudio.end());
+        }
       }
 
       g_GlobalProgress = 0;
