@@ -365,7 +365,11 @@ void Audio::Hook_GameFramePre(bool simulating, bool bFirstTick, bool bLastTick)
 
 void Audio::OnLevelShutdown()
 {
+    Message("[Audio] The loop is paused here.");
     g_bPlaying = false;
+    
+    if(!g_GlobalAudioBuffer.empty())
+        g_GlobalAudioBuffer.clear();
 }
 
 int Audio::Hook_LoadEventsFromFile(const char *filename, bool bSearchAll)
