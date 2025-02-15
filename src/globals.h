@@ -7,6 +7,19 @@
 #include <networksystem/inetworkmessages.h>
 #include <networksystem/inetworkserializer.h>
 #include "../protobuf/generated/netmessages.pb.h"
+#include <queue>
+#include <string>
+
+struct Sound {
+  std::string audioBuffer;
+  std::string audioPath;
+  float volume;
+  float duration;
+};
+
+extern std::queue<Sound> g_SoundQueue;
+extern float g_CurrentSoundProgress;
+extern bool g_IsPaused;
 
 const int MAX_LISTENERS = 1024;
 

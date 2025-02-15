@@ -169,6 +169,9 @@ void ProcessVoiceData(std::string audioBuffer, std::string audioPath, std::funct
     }
   }
 
+  // Calculate the duration of the sound
+  float duration = static_cast<float>(buffer.size()) / (48000 * 2); // Assuming 16-bit PCM, 48kHz, mono
+
   Message("Encoding to opus format...\n");
   while (true)
   {
@@ -211,6 +214,9 @@ void ProcessVoiceData(std::string audioBuffer, std::string audioPath, std::funct
   {
     callback(msgs);
   }
+
+  // Update the duration of the current sound
+  g_CurrentSoundProgress = duration;
 }
 
 CServerSideClient *GetFakeClient(const char *name)

@@ -6,6 +6,10 @@ int FRAMESIZE = 960;
 int SAMPLERATE = 48000;
 int g_SectionNumber = 0;
 
+std::queue<Sound> g_SoundQueue;
+float g_CurrentSoundProgress = 0.0f;
+bool g_IsPaused = false;
+
 std::shared_mutex g_Mutex;
 const int _MAX_SLOT = 64;
 int MAX_SLOT = _MAX_SLOT;

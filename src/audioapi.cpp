@@ -79,31 +79,66 @@ namespace api
 
   void Play(std::string audioBuffer, std::string audioPath, float volume)
   {
-    if (audioBuffer.size() == 0 && audioPath.size() == 0)
+    std::unique_lock<std::shared_mutex> lock(g_Mutex);
+
+  // Add the new sound to the queue
+    g_SoundQueue.push({audioBuffer, audioPath, volume, 0.0f});
+
+    // If a sound is already playing, pause it
+    if (!g_IsPaused && g_CurrentSoundProgress > 0.0f)
     {
-      std::unique_lock<std::shared_mutex> lock(g_Mutex);
-      g_GlobalAudioBuffer.clear();
-      g_GlobalProgress = 0;
+      g_IsPaused = true;
       for (auto &callback : g_PlayEndListeners)
       {
         if (callback != nullptr)
           callback(-1);
       }
-      return;
     }
-    auto lambda = [](std::vector<SVCVoiceDataMessage> msgbuffer)
+
+    // Process the next sound in the queue
+    ProcessNextSound();
+  }
+
+  void ProcessNextSound()
+  {
+    if (g_SoundQueue.empty())
+      return;
+
+    Sound sound = g_SoundQueue.front();
+    g_SoundQueue.pop();
+
+    auto lambda = [sound](std::vector<SVCVoiceDataMessage> msgbuffer)
     {
       std::unique_lock<std::shared_mutex> lock(g_Mutex);
       g_GlobalAudioBuffer = msgbuffer;
       g_GlobalProgress = 0;
+      g_IsPaused = false;
+      g_CurrentSoundProgress = sound.duration;
       for (auto &callback : g_PlayStartListeners)
       {
         if (callback != nullptr)
           callback(-1);
       }
+      ResumePlayback();
     };
-    std::thread process(ProcessVoiceData, audioBuffer, audioPath, lambda, volume);
+
+    std::thread process(ProcessVoiceData, sound.audioBuffer, sound.audioPath, lambda, sound.volume);
     process.detach();
+  }
+
+  void ResumePlayback()
+  {
+    std::unique_lock<std::shared_mutex> lock(g_Mutex);
+    if (g_IsPaused)
+    {
+      g_IsPaused = false;
+      g_GlobalProgress += g_CurrentSoundProgress;
+      for (auto &callback : g_PlayStartListeners)
+      {
+        if (callback != nullptr)
+          callback(-1);
+      }
+    }
   }
 
   bool IsPlaying(int slot)
