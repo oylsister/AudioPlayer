@@ -77,26 +77,19 @@ namespace api
     process.detach();
   }
 
-  void Play(std::string audioBuffer, std::string audioPath, float volume)
+  void ResumePlayback()
   {
     std::unique_lock<std::shared_mutex> lock(g_Mutex);
-
-  // Add the new sound to the queue
-    g_SoundQueue.push({audioBuffer, audioPath, volume, 0.0f});
-
-    // If a sound is already playing, pause it
-    if (!g_IsPaused && g_CurrentSoundProgress > 0.0f)
+    if (g_IsPaused)
     {
-      g_IsPaused = true;
-      for (auto &callback : g_PlayEndListeners)
+      g_IsPaused = false;
+      g_GlobalProgress += g_CurrentSoundProgress;
+      for (auto &callback : g_PlayStartListeners)
       {
         if (callback != nullptr)
           callback(-1);
       }
     }
-
-    // Process the next sound in the queue
-    ProcessNextSound();
   }
 
   void ProcessNextSound()
@@ -126,19 +119,26 @@ namespace api
     process.detach();
   }
 
-  void ResumePlayback()
+  void Play(std::string audioBuffer, std::string audioPath, float volume)
   {
     std::unique_lock<std::shared_mutex> lock(g_Mutex);
-    if (g_IsPaused)
+
+  // Add the new sound to the queue
+    g_SoundQueue.push({audioBuffer, audioPath, volume, 0.0f});
+
+    // If a sound is already playing, pause it
+    if (!g_IsPaused && g_CurrentSoundProgress > 0.0f)
     {
-      g_IsPaused = false;
-      g_GlobalProgress += g_CurrentSoundProgress;
-      for (auto &callback : g_PlayStartListeners)
+      g_IsPaused = true;
+      for (auto &callback : g_PlayEndListeners)
       {
         if (callback != nullptr)
           callback(-1);
       }
     }
+
+    // Process the next sound in the queue
+    ProcessNextSound();
   }
 
   bool IsPlaying(int slot)
