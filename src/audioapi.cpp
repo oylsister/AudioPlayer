@@ -100,7 +100,7 @@ namespace api
       g_TempAudio.insert(g_TempAudio.begin(), g_GlobalAudioBuffer.begin(), g_GlobalAudioBuffer.end());
     }
 
-    auto lambda = [&g_TempAudio](std::vector<SVCVoiceDataMessage> msgbuffer)
+    auto lambda = [g_TempAudio](std::vector<SVCVoiceDataMessage> msgbuffer) mutable
     {
       std::unique_lock<std::shared_mutex> lock(g_Mutex);
       g_GlobalAudioBuffer = msgbuffer;
