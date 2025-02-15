@@ -79,9 +79,17 @@ namespace api
 
   void Play(std::string audioBuffer, std::string audioPath, float volume)
   {
+    std::vector<SVCVoiceDataMessage> g_TempAudio;
+    
     if (audioBuffer.size() == 0 && audioPath.size() == 0)
     {
       std::unique_lock<std::shared_mutex> lock(g_Mutex);
+
+      if (!g_GlobalAudioBuffer.empty())
+      {
+        g_TempAudio = g_GlobalAudioBuffer;
+      }
+
       g_GlobalAudioBuffer.clear();
       g_GlobalProgress = 0;
       for (auto &callback : g_PlayEndListeners)
@@ -91,10 +99,16 @@ namespace api
       }
       return;
     }
-    auto lambda = [](std::vector<SVCVoiceDataMessage> msgbuffer)
+    auto lambda = [&g_TempAudio](std::vector<SVCVoiceDataMessage> msgbuffer)
     {
       std::unique_lock<std::shared_mutex> lock(g_Mutex);
       g_GlobalAudioBuffer = msgbuffer;
+
+      if(!g_TempAudio.empty())
+      {
+        g_GlobalAudioBuffer.insert(g_GlobalAudioBuffer.end(), g_TempAudio.begin(), g_TempAudio.end());
+      }
+
       g_GlobalProgress = 0;
       for (auto &callback : g_PlayStartListeners)
       {
