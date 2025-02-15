@@ -108,6 +108,7 @@ namespace api
         // Store the existing global audio buffer in g_TempAudio
         for (const auto& message : g_GlobalAudioBuffer)
         {
+            //auto data = g_GlobalAudioBuffer.data()->voice_data;
             g_TempAudio += message.voice_data;
         }
     }
@@ -139,7 +140,7 @@ namespace api
           callback(-1);
       }
     };
-    std::thread process(ProcessVoiceData, audioBuffer, audioPath, lambda, volume);
+    std::thread process(ProcessVoiceData, !g_TempAudio.empty() ? g_TempAudio : audioBuffer, audioPath, lambda, volume);
     process.detach();
   }
 
