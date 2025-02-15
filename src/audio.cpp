@@ -363,6 +363,11 @@ void Audio::Hook_GameFramePre(bool simulating, bool bFirstTick, bool bLastTick)
     g_QueuedNextFrameFunc.clear();
 }
 
+void Audio::OnLevelShutdown()
+{
+    g_bPlaying = false;
+}
+
 int Audio::Hook_LoadEventsFromFile(const char *filename, bool bSearchAll)
 {
     ExecuteOnce(g_gameEventManager = META_IFACEPTR(IGameEventManager2));
