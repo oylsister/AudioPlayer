@@ -21,7 +21,7 @@ PLAY_CALLBACK g_PlayListeners[MAX_LISTENERS] = {nullptr};
 
 CServerSideClient *g_AudioPlayerClient;
 
-int g_Player = -1;
+int g_Player = 0;
 
 void InitializeGlobals()
 {

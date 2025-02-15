@@ -86,10 +86,6 @@ namespace api
   void StopAllPlaying()
   {
     std::unique_lock<std::shared_mutex> lock(g_Mutex);
-    for (auto &msg : g_GlobalAudioBuffer)
-    {
-      msg.Destroy();
-    }
     g_GlobalAudioBuffer.clear();
     CallPlayEndListeners(-1);
     if (g_ProcessingThreads.Find(-1) != g_ProcessingThreads.InvalidIndex())
@@ -99,10 +95,6 @@ namespace api
   void StopPlaying(int slot)
   {
     std::unique_lock<std::shared_mutex> lock(g_Mutex);
-    for (auto &msg : g_PlayerAudioBuffer[slot])
-    {
-      msg.Destroy();
-    }
     g_PlayerAudioBuffer[slot].clear();
     CallPlayEndListeners(slot);
     if (g_ProcessingThreads.Find(slot) != g_ProcessingThreads.InvalidIndex())
