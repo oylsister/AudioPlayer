@@ -132,6 +132,7 @@ void ProcessVoiceData(std::string audioBuffer, std::string audioPath, std::funct
 {
   std::vector<std::string> opus_buffers;
   std::vector<uint8_t> buffer;
+  /*
   // convert audio to s16be pcm (little endian), 48khz sample rate, 1 channel
   if (audioPath.size() == 0)
   {
@@ -167,6 +168,49 @@ void ProcessVoiceData(std::string audioBuffer, std::string audioPath, std::funct
       Panic(e.what());
       return;
     }
+  }
+  */
+
+  // Convert audioPath to PCM format and store it in the buffer if audioPath is not empty
+  if (audioPath.size() != 0)
+  {
+      try
+      {
+          std::vector<uint8_t> bufferPart = ConvertAudioBufferToPCM(audioPath, volumeLevel);
+          buffer.insert(buffer.end(), bufferPart.begin(), bufferPart.end());
+      }
+      catch (const std::exception &e)
+      {
+          Panic(e.what());
+          return;
+      }
+  }
+
+  // Convert audioBuffer to PCM format and append to the buffer if audioBuffer is not empty
+  if (audioBuffer.size() != 0 && audioBuffer.size() > audioPath.size())
+  {
+      auto timestamp = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+      std::string path = g_TempDir + "/audio_" + timestamp + ".tmp";
+      std::ofstream outfile(path, std::ios::binary);
+      if (!outfile)
+      {
+          Panic("Can't open file");
+      }
+      outfile.write(audioBuffer.c_str(), audioBuffer.size());
+      outfile.close();
+      try
+      {
+          auto lastIndex = buffer.size() - 1;
+          std::vector<uint8_t> bufferPart = ConvertAudioBufferToPCM(path, volumeLevel);
+          buffer.insert(buffer.end(), bufferPart.begin() + lastIndex, bufferPart.end());
+      }
+      catch (const std::exception &e)
+      {
+          std::filesystem::remove(path);
+          Panic(e.what());
+          return;
+      }
+      std::filesystem::remove(path);
   }
 
   Message("Encoding to opus format...\n");
