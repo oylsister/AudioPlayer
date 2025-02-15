@@ -117,7 +117,7 @@ void SendVoiceDataLoop()
                         callback(-1);
                 }
                 g_GlobalProgress = 0;
-                ProcessNextSound();
+                api::ProcessNextSound();
             }
             else
             {
