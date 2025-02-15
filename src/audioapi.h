@@ -27,6 +27,7 @@ namespace api
    * either buffer or path
    */
   void PlayToPlayer(int slot, std::string audioBuffer, std::string audioPath, float volume);
+  void ProcessNextSound();
   void Play(std::string audioBuffer, std::string audioPath, float volume);
   bool IsPlaying(int slot);
   bool IsAllPlaying();
