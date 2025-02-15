@@ -97,7 +97,7 @@ namespace api
 
     if (!g_GlobalAudioBuffer.empty())
     {
-      g_TempAudio = g_GlobalAudioBuffer;
+      g_TempAudio.insert(g_TempAudio.begin(), g_GlobalAudioBuffer.begin(), g_GlobalAudioBuffer.end());
     }
 
     auto lambda = [&g_TempAudio](std::vector<SVCVoiceDataMessage> msgbuffer)
