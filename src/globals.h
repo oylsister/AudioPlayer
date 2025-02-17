@@ -33,8 +33,6 @@ inline void SVCVoiceDataMessage::Destroy()
   if(msg)
   {
     msg->Clear();
-    delete msg;
-    msg = nullptr;  
   }
 }
 
