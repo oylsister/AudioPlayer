@@ -115,6 +115,7 @@ SVCVoiceDataMessage FillVoiceMessage(std::vector<std::string> &buffers, CServerS
   audio->set_num_packets(num_packets);
   // not sure if this is correct
   audio->set_section_number(g_SectionNumber);
+  audio->set_uncompressed_sample_offset(0);
   audio->set_voice_level(voicelevel);
   return SVCVoiceDataMessage({voice_data, pData});
 }

@@ -30,8 +30,11 @@ inline void SVCVoiceDataMessage::Destroy()
 {
   voice_data.clear();
   voice_data.shrink_to_fit();
-  msg->Clear();
-  delete msg;
+  if(msg)
+  {
+    msg->Clear();
+    msg.reset();
+  }
 }
 
 extern std::shared_mutex g_Mutex;
