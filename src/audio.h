@@ -31,6 +31,7 @@ public:
 public:
   void OnLevelShutdown();
   void Hook_StartupServer(const GameSessionConfiguration_t &config, ISource2WorldSession *, const char *);
+  void Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick );
   int Hook_LoadEventsFromFile(const char *filename, bool bSearchAll);
 
 public:

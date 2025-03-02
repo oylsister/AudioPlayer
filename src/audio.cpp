@@ -84,6 +84,129 @@ void Panic(const char *msg, ...)
 
     va_end(args);
 }
+
+void SendVoiceDataGameFrame()
+{
+    if (!g_bPlaying)
+    {
+        return;
+    }
+    CUtlVector<CServerSideClient *> *client_list = GetClientList();
+    if (client_list->Count() == 0)
+    {
+        return;
+    }
+
+    SVCVoiceDataMessage all_data;
+    bool played = false;
+    if (!g_GlobalAudioBuffer.empty())
+    {
+        all_data = g_GlobalAudioBuffer.front();
+        g_GlobalAudioBuffer.erase(g_GlobalAudioBuffer.begin());
+        played = true;
+        if (g_GlobalAudioBuffer.empty() && g_ProcessingThreads.Find(-1) == g_ProcessingThreads.InvalidIndex())
+        {
+            // call all play end listeners
+            for (auto &callback : g_PlayEndListeners)
+            {
+                if (callback != nullptr)
+                    callback(-1);
+            }
+        }
+        else
+        {
+            for (auto &callback : g_PlayListeners)
+            {
+                if (callback != nullptr)
+                    callback(-1);
+            }
+        }
+    }
+
+    auto tv = GetFakeClient("Sympho")->GetPlayerSlot().Get();
+
+    for (int i = 0; i < client_list->Count(); i++)
+    {
+        if (!client_list->IsValidIndex(i))
+            continue;
+    
+        SVCVoiceDataMessage player_data;
+        CServerSideClient *client = client_list->Element(i);
+        if (!client->IsInGame() || client->IsFakePlayer() || client->IsHLTV())
+            continue;
+
+        int slot = client->GetPlayerSlot().Get();
+        std::vector<SVCVoiceDataMessage> *playerBuffer = &g_PlayerAudioBuffer[slot];
+        if (!playerBuffer->empty())
+        {
+            player_data = playerBuffer->front();
+            playerBuffer->erase(playerBuffer->begin());
+            played = true;
+            if (playerBuffer->empty() && g_ProcessingThreads.Find(slot) == g_ProcessingThreads.InvalidIndex())
+            {
+                // call all play end listeners
+                for (auto &callback : g_PlayEndListeners)
+                {
+                    if (callback != nullptr)
+                        callback(slot);
+                }
+            }
+            else
+            {
+                for (auto &callback : g_PlayListeners)
+                {
+                    if (callback != nullptr)
+                        callback(slot);
+                }
+            }
+        }
+        if (!all_data.msg && !player_data.msg)
+        {
+            continue;
+        }
+
+        if (!api::IsHearing(slot))
+            continue;
+        INetworkMessageInternal *pSVC_VoiceData = g_pNetworkMessages->FindNetworkMessageById(47);
+        CNetMessagePB<CSVCMsg_VoiceData> *pData = pSVC_VoiceData->AllocateMessage()->ToPB<CSVCMsg_VoiceData>();
+        SVCVoiceDataMessage *data = nullptr;
+        if (player_data.msg)
+        {
+            data = &player_data;
+        }
+        else
+        {
+            data = &all_data;
+        }
+        // data.msg->mutable_audio()->set_voice_level(GetPlayerVolume(slot));
+        pData->CopyFrom(*data->msg);
+        std::string *copied_data = new std::string(data->voice_data);
+        pData->mutable_audio()->set_allocated_voice_data(copied_data);
+        pData->mutable_audio()->set_section_number(g_SectionNumber);
+        // my test:
+        // real player -> play from real player
+        // fake client -> play from a bot which has no team, need sv_alltalk 1
+        // 1 (non-exist but legit client index) -> a skeleton icon with no name playing the audio, no need sv_alltalk 1
+        // 1337 (non-exist and illegal client index) -> no display, but still playing audio, no need sv_alltalk 1
+        // btw, calling CreateFakeClient in this thread will cause weird bug in counterstrikesharp
+
+        pData->set_client(tv);
+        client->GetNetChannel()->SendNetMessage(pData, NetChannelBufType_t::BUF_VOICE);
+        if (player_data.msg)
+        {
+            player_data.Destroy();
+        }
+    }
+    if (all_data.msg)
+    {
+        all_data.Destroy();
+    }
+    if (played)
+    {
+        g_SectionNumber += 1;
+    }
+}
+
 void SendVoiceDataLoop()
 {
 
@@ -303,11 +426,23 @@ void Audio::Hook_StartupServer(const GameSessionConfiguration_t &config, ISource
     RegisterEventListeners();
     if (!initialized)
     {
+        /*
         VoiceDataSendingThread = std::thread(SendVoiceDataLoop);
         VoiceDataSendingThread.detach();
+        */
         initialized = true;
     }
     // g_bPlaying = 1;
+}
+
+void Audio::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
+{
+    if (!initialized)
+    {
+        initialized = true;
+    }
+    
+    SendVoiceDataGameFrame();
 }
 
 void Audio::OnLevelShutdown()
