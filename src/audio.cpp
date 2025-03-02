@@ -59,6 +59,7 @@ class GameSessionConfiguration_t
 
 CServerSideClient *tvPlayer = nullptr;
 
+SH_DECL_HOOK3_void(IServerGameDLL, GameFrame, SH_NOATTRIB, 0, bool, bool, bool);
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
 SH_DECL_HOOK2(IGameEventManager2, LoadEventsFromFile, SH_NOATTRIB, 0, int, const char *, bool);
 void Message(const char *msg, ...)
@@ -125,7 +126,11 @@ void SendVoiceDataGameFrame()
         }
     }
 
-    auto tv = GetFakeClient("Sympho")->GetPlayerSlot().Get();
+    if(!tvPlayer)
+        return;
+
+    //auto tv = GetFakeClient("Sympho")->GetPlayerSlot().Get();
+    auto tv = tvPlayer->GetPlayerSlot().Get();
 
     for (int i = 0; i < client_list->Count(); i++)
     {
@@ -346,7 +351,7 @@ bool Audio::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool la
     PLUGIN_SAVEVARS();
 
     GET_V_IFACE_CURRENT(GetEngineFactory, g_pEngineServer2, IVEngineServer2, SOURCE2ENGINETOSERVER_INTERFACE_VERSION);
-    GET_V_IFACE_CURRENT(GetEngineFactory, g_pGameResourceServiceServer, IGameResourceService, GAMERESOURCESERVICESERVER_INTERFACE_VERSION);
+    GET_V_IFACE_CURRENT(GetEngineFactory, g_pGameResourceServiceServer, IGameResourceService, GAMERESOURCESERVICESERVER_INTERFACE_VERSION);\
     GET_V_IFACE_ANY(GetEngineFactory, g_gameEventSystem, IGameEventSystem, GAMEEVENTSYSTEM_INTERFACE_VERSION);
     GET_V_IFACE_ANY(GetEngineFactory, g_pNetworkServerService, INetworkServerService, NETWORKSERVERSERVICE_INTERFACE_VERSION);
     GET_V_IFACE_ANY(GetServerFactory, g_pSource2GameClients, IServerGameClients, SOURCE2GAMECLIENTS_INTERFACE_VERSION);
@@ -357,6 +362,8 @@ bool Audio::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool la
 
     engine = new CModule(ROOTBIN, "engine2");
     server = new CModule(GAMEBIN, "server");
+    
+    SH_ADD_HOOK(IServerGameDLL, GameFrame, g_pSource2Server, SH_MEMBER(this, &Audio::Hook_GameFrame), true);
     SH_ADD_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &Audio::Hook_StartupServer), true);
     auto pCGameEventManagerVTable = (IGameEventManager2 *)server->FindVirtualTable("CGameEventManager");
     g_iLoadEventsFromFileId = SH_ADD_DVPHOOK(IGameEventManager2, LoadEventsFromFile, pCGameEventManagerVTable, SH_MEMBER(this, &Audio::Hook_LoadEventsFromFile), false);
@@ -393,6 +400,7 @@ bool Audio::Load(PluginId id, ISmmAPI *ismm, char *error, size_t maxlen, bool la
 
 bool Audio::Unload(char *error, size_t maxlen)
 {
+    SH_REMOVE_HOOK(IServerGameDLL, GameFrame, g_pSource2Server, SH_MEMBER(this, &Audio::Hook_GameFrame), true);
     SH_REMOVE_HOOK(INetworkServerService, StartupServer, g_pNetworkServerService, SH_MEMBER(this, &Audio::Hook_StartupServer), true);
     SH_REMOVE_HOOK_ID(g_iLoadEventsFromFileId);
 
@@ -432,8 +440,10 @@ void Audio::Hook_StartupServer(const GameSessionConfiguration_t &config, ISource
     RegisterEventListeners();
     if (!initialized)
     {
+        /*
         VoiceDataSendingThread = std::thread(SendVoiceDataLoop);
         VoiceDataSendingThread.detach();
+        */
         initialized = true;
     }
     // g_bPlaying = 1;
@@ -447,14 +457,12 @@ void Audio::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
     if(!tvPlayer)
         tvPlayer = GetFakeClient("Sympho");
 
-    /*
     if (!initialized)
     {
         initialized = true;
     }
     
     SendVoiceDataGameFrame();
-    */
 }
 
 void Audio::OnLevelShutdown()
