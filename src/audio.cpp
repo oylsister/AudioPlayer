@@ -437,6 +437,9 @@ void Audio::Hook_StartupServer(const GameSessionConfiguration_t &config, ISource
 
 void Audio::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
 {
+    if(!simulating)
+        return;
+        
     if (!initialized)
     {
         initialized = true;
