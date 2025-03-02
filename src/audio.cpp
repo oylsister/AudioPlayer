@@ -57,6 +57,8 @@ class GameSessionConfiguration_t
 {
 };
 
+CServerSideClient *tvPlayer = nullptr;
+
 SH_DECL_HOOK3_void(INetworkServerService, StartupServer, SH_NOATTRIB, 0, const GameSessionConfiguration_t &, ISource2WorldSession *, const char *);
 SH_DECL_HOOK2(IGameEventManager2, LoadEventsFromFile, SH_NOATTRIB, 0, int, const char *, bool);
 void Message(const char *msg, ...)
@@ -251,7 +253,11 @@ void SendVoiceDataLoop()
             }
         }
 
-        auto tv = GetFakeClient("Sympho")->GetPlayerSlot().Get();
+        if(!tvPlayer)
+            continue;
+
+        //auto tv = GetFakeClient("Sympho")->GetPlayerSlot().Get();
+        auto tv = tvPlayer->GetPlayerSlot().Get();
 
         for (int i = 0; i < client_list->Count(); i++)
         {
@@ -426,10 +432,8 @@ void Audio::Hook_StartupServer(const GameSessionConfiguration_t &config, ISource
     RegisterEventListeners();
     if (!initialized)
     {
-        /*
         VoiceDataSendingThread = std::thread(SendVoiceDataLoop);
         VoiceDataSendingThread.detach();
-        */
         initialized = true;
     }
     // g_bPlaying = 1;
@@ -439,13 +443,18 @@ void Audio::Hook_GameFrame( bool simulating, bool bFirstTick, bool bLastTick )
 {
     if(!simulating)
         return;
-        
+
+    if(!tvPlayer)
+        tvPlayer = GetFakeClient("Sympho");
+
+    /*
     if (!initialized)
     {
         initialized = true;
     }
     
     SendVoiceDataGameFrame();
+    */
 }
 
 void Audio::OnLevelShutdown()
