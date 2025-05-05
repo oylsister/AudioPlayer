@@ -191,7 +191,12 @@ void SendVoiceDataLoop()
             // 1337 (non-exist and illegal client index) -> no display, but still playing audio, no need sv_alltalk 1
             // btw, calling CreateFakeClient in this thread will cause weird bug in counterstrikesharp
 
-            pData->set_client(0);
+            if(g_Player == -1)
+                pData->set_client(0);
+
+            else
+                pData->set_client(g_Player);
+
             client->GetNetChannel()->SendNetMessage(pData, NetChannelBufType_t::BUF_VOICE);
             if (player_data.msg)
             {

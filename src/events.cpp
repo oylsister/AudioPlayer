@@ -22,6 +22,7 @@
 #include <eiface.h>
 
 #include "tier0/memdbgon.h"
+#include "helper.h"
 
 extern IGameEventManager2 *g_gameEventManager;
 extern IVEngineServer2 *g_pEngineServer2;
@@ -60,4 +61,11 @@ void UnregisterEventListeners()
 GAME_EVENT_F(round_start)
 {
 	g_bPlaying = 1;
+
+	auto okay = GetFakeClient("Sympho");
+
+	if(okay)
+	{
+		g_Player = okay->GetPlayerSlot().Get();
+	}
 }
